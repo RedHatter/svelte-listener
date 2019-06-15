@@ -1,0 +1,15 @@
+{
+  "name": "svelte-listener",
+  "version": "0.0.1",
+  "description": "Generates a node tree from svelte's emited debug events.",
+  "license": "MIT",
+  "repository": "github:RedHatter/svelte-listener",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "main": "dist/index.js",
+  "module": "src/index.js",
+  "devDependencies": {
+    "rollup": "^1.15.5"
+  }
+}
