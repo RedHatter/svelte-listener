@@ -58,10 +58,14 @@ function addNode(node, target, anchor) {
 }
 
 function updateNode(node) {
+  if (!node) return
+
   for (const listener of listenerList) listener.update(node)
 }
 
 function removeNode(node) {
+  if (!node) return
+
   nodeMap.delete(node.id)
   nodeMap.delete(node.detail)
 
