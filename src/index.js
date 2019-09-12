@@ -123,6 +123,10 @@ document.addEventListener('SvelteRegisterBlock', e => {
         if (!node.parentBlock) node.parentBlock = lastPromiseParent
         break
 
+      case 'slot':
+        node.type = 'slot'
+        break
+
       case 'component':
         const componentNode = nodeMap.get(block)
         if (componentNode) {
