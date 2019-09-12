@@ -150,7 +150,29 @@ document.addEventListener('SvelteRegisterBlock', e => {
         break
     }
 
-    addNode(node, target, anchor)
+    if (type == 'each') {
+      let group = nodeMap.get(parentBlock.id + id)
+      if (!group) {
+        group = {
+          id: _id++,
+          type: 'block',
+          detail: {
+            ctx: {},
+            source: detail.source
+          },
+          tagName: 'each',
+          parentBlock,
+          children: []
+        }
+        nodeMap.set(parentBlock.id + id, group)
+        addNode(group, target, anchor)
+      }
+      node.parentBlock = group
+      node.type = 'iteration'
+      addNode(node, group, anchor)
+    } else {
+      addNode(node, target, anchor)
+    }
 
     currentBlock = node
 
