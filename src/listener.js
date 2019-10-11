@@ -24,3 +24,7 @@ export function update(node) {
 export function remove(node) {
   for (const listener of listenerList) listener.remove(node)
 }
+
+export function profile(frame) {
+  for (const listener of listenerList) listener.profile(frame)
+}

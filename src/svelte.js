@@ -1,4 +1,5 @@
 import { add, update, remove } from './listener.js'
+import { updateProfile } from './profiler.js'
 
 const nodeMap = new Map()
 let _id = 0
@@ -188,7 +189,7 @@ document.addEventListener('SvelteRegisterBlock', e => {
     }
 
     currentBlock = node
-    mountFn(target, anchor)
+    updateProfile(node, 'mount', mountFn, target, anchor)
     currentBlock = parentBlock
   }
 
@@ -198,7 +199,7 @@ document.addEventListener('SvelteRegisterBlock', e => {
 
     update(currentBlock)
 
-    updateFn(changed, ctx)
+    updateProfile(currentBlock, 'patch', updateFn, changed, ctx)
 
     currentBlock = parentBlock
   }
@@ -212,7 +213,7 @@ document.addEventListener('SvelteRegisterBlock', e => {
       removeNode(node)
     }
 
-    detachFn(detaching)
+    updateProfile(node, 'detach', detachFn, detaching)
   }
 })
 
