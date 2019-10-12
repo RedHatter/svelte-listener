@@ -40,7 +40,11 @@ export function updateProfile(node, type, fn, ...args) {
   parentFrame.children.push(currentFrame)
   fn(...args)
   currentFrame.end = performance.now()
+  currentFrame.duration = currentFrame.end - currentFrame.start
   currentFrame = parentFrame
+
+  if (currentFrame.type == 'top')
+    topFrame.duration = topFrame.children[topFrame.children.length - 1].end - topFrame.children[0].start
 
   profile(topFrame)
 }
