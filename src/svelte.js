@@ -257,17 +257,27 @@ function svelteUpdateNode (e) {
 }
 
 function setup (root) {
-  root.document.addEventListener('SvelteRegisterComponent', svelteRegisterComponent)
-  root.document.addEventListener('SvelteRegisterBlock', svelteRegisterBlock)
-  root.document.addEventListener('SvelteDOMInsert', svelteDOMInsert)
-  root.document.addEventListener('SvelteDOMRemove', svelteDOMRemove)
-  root.document.addEventListener('SvelteDOMAddEventListener', svelteDOMAddEventListener)
-  root.document.addEventListener('SvelteDOMRemoveEventListener', svelteDOMRemoveEventListener)
-  root.document.addEventListener('SvelteDOMSetData', svelteUpdateNode)
-  root.document.addEventListener('SvelteDOMSetProperty', svelteUpdateNode)
-  root.document.addEventListener('SvelteDOMSetAttribute', svelteUpdateNode)
-  root.document.addEventListener('SvelteDOMRemoveAttribute', svelteUpdateNode)
+  root.addEventListener('SvelteRegisterComponent', svelteRegisterComponent)
+  root.addEventListener('SvelteRegisterBlock', svelteRegisterBlock)
+  root.addEventListener('SvelteDOMInsert', svelteDOMInsert)
+  root.addEventListener('SvelteDOMRemove', svelteDOMRemove)
+  root.addEventListener('SvelteDOMAddEventListener', svelteDOMAddEventListener)
+  root.addEventListener('SvelteDOMRemoveEventListener', svelteDOMRemoveEventListener)
+  root.addEventListener('SvelteDOMSetData', svelteUpdateNode)
+  root.addEventListener('SvelteDOMSetProperty', svelteUpdateNode)
+  root.addEventListener('SvelteDOMSetAttribute', svelteUpdateNode)
+  root.addEventListener('SvelteDOMRemoveAttribute', svelteUpdateNode)
 }
 
-setup(window)
-Array.from(window.frames).forEach(setup)
+setup(window.document)
+for (let i = 0; i < window.frames.length; i++) {
+  const frame = window.frames[i]
+  const root = frame.document
+  setup(root)
+  const timer = setInterval(() => {
+    if (root == frame.document) return
+    clearTimeout(timer)
+    setup(frame.document)
+  }, 0)
+  root.addEventListener('readystatechange', e => clearTimeout(timer), { once: true })
+}
