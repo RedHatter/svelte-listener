@@ -90,7 +90,7 @@ function insert(element, target, anchor) {
   }
 }
 
-document.addEventListener('SvelteRegisterComponent', e => {
+function svelteRegisterComponent (e) {
   const { component, tagName } = e.detail
 
   const node = nodeMap.get(component.$$.fragment)
@@ -108,11 +108,11 @@ document.addEventListener('SvelteRegisterComponent', e => {
       tagName
     })
   }
-})
+}
 
 // Ugly hack b/c promises are resolved/rejected outside of normal render flow
 let lastPromiseParent = null
-document.addEventListener('SvelteRegisterBlock', e => {
+function svelteRegisterBlock (e) {
   const { type, id, block, ...detail } = e.detail
   const tagName = type == 'pending' ? 'await' : type
   const nodeId = _id++
@@ -215,30 +215,30 @@ document.addEventListener('SvelteRegisterBlock', e => {
 
     updateProfile(node, 'detach', detachFn, detaching)
   }
-})
+}
 
-document.addEventListener('SvelteDOMInsert', e => {
+function svelteDOMInsert (e) {
   const { node: element, target, anchor } = e.detail
 
   insert(element, target, anchor)
-})
+}
 
-document.addEventListener('SvelteDOMRemove', e => {
+function svelteDOMRemove (e) {
   const node = nodeMap.get(e.detail.node)
   if (!node) return
 
   removeNode(node)
-})
+}
 
-document.addEventListener('SvelteDOMAddEventListener', e => {
+function svelteDOMAddEventListener (e) {
   const { node, ...detail } = e.detail
 
   if (!node.__listeners) node.__listeners = []
 
   node.__listeners.push(detail)
-})
+}
 
-document.addEventListener('SvelteDOMRemoveEventListener', e => {
+function svelteDOMRemoveEventListener (e) {
   const { node, event, handler, modifiers } = e.detail
 
   if (!node.__listeners) return
@@ -250,15 +250,24 @@ document.addEventListener('SvelteDOMRemoveEventListener', e => {
   if (index == -1) return
 
   node.__listeners.splice(index, 1)
-})
+}
 
-document.addEventListener('SvelteDOMSetData', e => updateElement(e.detail.node))
-document.addEventListener('SvelteDOMSetProperty', e =>
+function svelteUpdateNode (e) {
   updateElement(e.detail.node)
-)
-document.addEventListener('SvelteDOMSetAttribute', e =>
-  updateElement(e.detail.node)
-)
-document.addEventListener('SvelteDOMRemoveAttribute', e =>
-  updateElement(e.detail.node)
-)
+}
+
+function setup (root) {
+  root.document.addEventListener('SvelteRegisterComponent', svelteRegisterComponent)
+  root.document.addEventListener('SvelteRegisterBlock', svelteRegisterBlock)
+  root.document.addEventListener('SvelteDOMInsert', svelteDOMInsert)
+  root.document.addEventListener('SvelteDOMRemove', svelteDOMRemove)
+  root.document.addEventListener('SvelteDOMAddEventListener', svelteDOMAddEventListener)
+  root.document.addEventListener('SvelteDOMRemoveEventListener', svelteDOMRemoveEventListener)
+  root.document.addEventListener('SvelteDOMSetData', svelteUpdateNode)
+  root.document.addEventListener('SvelteDOMSetProperty', svelteUpdateNode)
+  root.document.addEventListener('SvelteDOMSetAttribute', svelteUpdateNode)
+  root.document.addEventListener('SvelteDOMRemoveAttribute', svelteUpdateNode)
+}
+
+setup(window)
+Array.from(window.frames).forEach(setup)
