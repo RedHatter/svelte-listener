@@ -117,103 +117,109 @@ function svelteRegisterBlock (e) {
   const tagName = type == 'pending' ? 'await' : type
   const nodeId = _id++
 
-  const mountFn = block.m
-  const updateFn = block.p
-  const detachFn = block.d
-  block.m = (target, anchor) => {
-    const parentBlock = currentBlock
-    let node = {
-      id: nodeId,
-      type: 'block',
-      detail,
-      tagName,
-      parentBlock,
-      children: []
-    }
-
-    switch (type) {
-      case 'then':
-      case 'catch':
-        if (!node.parentBlock) node.parentBlock = lastPromiseParent
-        break
-
-      case 'slot':
-        node.type = 'slot'
-        break
-
-      case 'component':
-        const componentNode = nodeMap.get(block)
-        if (componentNode) {
-          nodeMap.delete(block)
-          Object.assign(node, componentNode)
-        } else {
-          Object.assign(node, {
-            type: 'component',
-            tagName: 'Unknown',
-            detail: {}
-          })
-          nodeMap.set(block, node)
-        }
-
-        Promise.resolve().then(
-          () =>
-            node.detail.$$ &&
-            Object.keys(node.detail.$$.bound).length &&
-            update(node)
-        )
-        break
-    }
-
-    if (type == 'each') {
-      let group = nodeMap.get(parentBlock.id + id)
-      if (!group) {
-        group = {
-          id: _id++,
-          type: 'block',
-          detail: {
-            ctx: {},
-            source: detail.source
-          },
-          tagName: 'each',
-          parentBlock,
-          children: []
-        }
-        nodeMap.set(parentBlock.id + id, group)
-        addNode(group, target, anchor)
+  if (block.m) {
+    const mountFn = block.m
+    block.m = (target, anchor) => {
+      const parentBlock = currentBlock
+      let node = {
+        id: nodeId,
+        type: 'block',
+        detail,
+        tagName,
+        parentBlock,
+        children: []
       }
-      node.parentBlock = group
-      node.type = 'iteration'
-      addNode(node, group, anchor)
-    } else {
-      addNode(node, target, anchor)
-    }
 
-    currentBlock = node
-    updateProfile(node, 'mount', mountFn, target, anchor)
-    currentBlock = parentBlock
+      switch (type) {
+        case 'then':
+        case 'catch':
+          if (!node.parentBlock) node.parentBlock = lastPromiseParent
+          break
+
+        case 'slot':
+          node.type = 'slot'
+          break
+
+        case 'component':
+          const componentNode = nodeMap.get(block)
+          if (componentNode) {
+            nodeMap.delete(block)
+            Object.assign(node, componentNode)
+          } else {
+            Object.assign(node, {
+              type: 'component',
+              tagName: 'Unknown',
+              detail: {}
+            })
+            nodeMap.set(block, node)
+          }
+
+          Promise.resolve().then(
+            () =>
+              node.detail.$$ &&
+              Object.keys(node.detail.$$.bound).length &&
+              update(node)
+          )
+          break
+      }
+
+      if (type == 'each') {
+        let group = nodeMap.get(parentBlock.id + id)
+        if (!group) {
+          group = {
+            id: _id++,
+            type: 'block',
+            detail: {
+              ctx: {},
+              source: detail.source
+            },
+            tagName: 'each',
+            parentBlock,
+            children: []
+          }
+          nodeMap.set(parentBlock.id + id, group)
+          addNode(group, target, anchor)
+        }
+        node.parentBlock = group
+        node.type = 'iteration'
+        addNode(node, group, anchor)
+      } else {
+        addNode(node, target, anchor)
+      }
+
+      currentBlock = node
+      updateProfile(node, 'mount', mountFn, target, anchor)
+      currentBlock = parentBlock
+    }
   }
 
-  block.p = (changed, ctx) => {
-    const parentBlock = currentBlock
-    currentBlock = nodeMap.get(nodeId)
+  if (block.p) {
+    const patchFn = block.p
+    block.p = (changed, ctx) => {
+      const parentBlock = currentBlock
+      currentBlock = nodeMap.get(nodeId)
 
-    update(currentBlock)
+      update(currentBlock)
 
-    updateProfile(currentBlock, 'patch', updateFn, changed, ctx)
+      updateProfile(currentBlock, 'patch', patchFn, changed, ctx)
 
-    currentBlock = parentBlock
+      currentBlock = parentBlock
+    }
   }
 
-  block.d = detaching => {
-    const node = nodeMap.get(nodeId)
+  if (block.d) {
+    const detachFn = block.d
+    block.d = detaching => {
+      const node = nodeMap.get(nodeId)
 
-    if (node) {
-      if (node.tagName == 'await') lastPromiseParent = node.parentBlock
+      if (node) {
+        if (node.tagName == 'await') lastPromiseParent = node.parentBlock
 
-      removeNode(node)
+        removeNode(node)
+      }
+
+      updateProfile(node, 'detach', detachFn, detaching)
     }
-
-    updateProfile(node, 'detach', detachFn, detaching)
   }
 }
 
