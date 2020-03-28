@@ -18,6 +18,11 @@ export function getRootNodes() {
   return rootNodes
 }
 
+let svelteVersion = null
+export function getSvelteVersion() {
+  return svelteVersion
+}
+
 function addNode(node, target, anchor) {
   nodeMap.set(node.id, node)
   nodeMap.set(node.detail, node)
@@ -263,6 +268,8 @@ function svelteUpdateNode (e) {
 }
 
 function setup (root) {
+  root.addEventListener('SvelteRegisterBlock', e => svelteVersion = e.detail.version, { once: true })
+
   root.addEventListener('SvelteRegisterComponent', svelteRegisterComponent)
   root.addEventListener('SvelteRegisterBlock', svelteRegisterBlock)
   root.addEventListener('SvelteDOMInsert', svelteDOMInsert)
